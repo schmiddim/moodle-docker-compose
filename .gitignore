@@ -1,0 +1,6 @@
+app
+.idea
+dev-config/mariadb
+dev-config/nginx/logs/
+dev-config/moodle
+dev-config/mbz-files

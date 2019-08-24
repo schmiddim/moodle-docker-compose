@@ -1,0 +1,58 @@
+version: "3"
+
+services:
+  nginx_moodle:
+    image: byjg/nginx-extras
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./dev-config/nginx/conf.d:/etc/nginx/conf.d
+      - ./dev-config/nginx/logs:/var/log/nginx
+      - ./app/:/var/www/
+    links:
+      - moodle
+  moodle:
+    image: dmiseev/php-fpm7.2
+    working_dir: /app
+    volumes:
+      - ./app/:/app
+      - ./dev-config/moodle/dataroot:/opt/moodledata:rw
+      - ./dev-config/moodle/moodle_localcache:/opt/moodle_localcache:rw
+  moosh:
+    image: itschmitt/moosh
+    volumes:
+      - ./app/:/app/
+      - ./dev-config/moodle/dataroot:/opt/moodledata:rw
+      - ./dev-config/moodle/moodle_localcache:/opt/moodle_localcache:rw
+      - ./dev-config/mbz-files:/mbz:rw
+    entrypoint: moosh
+    command: "--help"
+
+  mysql_moodle:
+    image: "mariadb:latest"
+    container_name: fsmoodle35-mono_mysql_moodle_1
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_DATABASE: "fsmoodle"
+      MYSQL_ROOT_PASSWORD: "fsmoodle"
+    volumes:
+      - ./dev-config/mariadb/:/var/lib/mysql
+    ports:
+      - "3310:3306"
+    links:
+      - moodle
+  phpmyadmin_moodle:
+    image: phpmyadmin/phpmyadmin
+    environment:
+      - PMA_HOST=mysql_moodle
+      - PMA_PORT= 3306
+    ports:
+      - "${PMA_PORT:-8082}:80"
+    volumes:
+      - /sessions
+    logging:
+      driver: none
+
+    links:
+      - mysql_moodle
